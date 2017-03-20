@@ -1,7 +1,9 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <fstream>
 #include "InterfaceManager.h"
 #include "State.h"
+#include "Player.h"
 
 class Game 
 {
@@ -11,8 +13,15 @@ public:
 	void Run();
 
 private:
+	// Loading and saving settings & statistics. Load returns last colorID
+	int Load();
+	void Save();
+
 	// Pointer for count of scores
 	int * score;
+
+	// Pointer for player object instance
+	Player * bird;
 	
 	// For better management of memory - used when state changes
 	enum StateList
@@ -48,4 +57,13 @@ private:
 
 	// Memory management
 	void ChangeState(StateList newState);
+
+	// Color of interface
+	int interfaceColor;
+
+	// Global score of all games
+	int globalScore;
+
+	// ID of sprite used by player
+	int spriteID;
 };

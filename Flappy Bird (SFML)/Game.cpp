@@ -12,19 +12,82 @@ Game::~Game()
 		m_window.close();
 }
 
+int Game::Load()
+{
+	int(*GetDec)(char x) = [](char x)->int { if (x < 58) return static_cast<int>(x - 48); else return static_cast<int>(x - 65); };
+	std::fstream data;
+	data.open("data1.bin",std::ios::in);
+	if (data.is_open() == false)
+	{
+		std::cerr << "Cannot load data binaries\n";
+		interfaceColor = 0;
+		globalScore = 0;
+		spriteID = 0;
+		return 0;
+	}
+
+	char loadingChar;
+	for(int i = 0; i < 10; i++)
+		data >> loadingChar;
+	data >> loadingChar;
+	interfaceColor = GetDec(loadingChar);
+
+	int loadingInt;
+	data >> std::hex >> loadingInt;
+	globalScore = loadingInt;
+	data >> std::hex >> loadingInt;
+	spriteID = loadingInt;
+	return interfaceColor;
+}
+
+void Game::Save()
+{
+	char(*RandomHex)() = []()->char { int x = rand() % 16; if (x < 10) return static_cast<char>(x + 48); else return static_cast<char>(x % 9 + 65); };
+	char(*GetHex)(int x) = [](int x)->char { if (x < 10) return static_cast<char>(x + 48); else return static_cast<char>(x % 9 + 65);  };
+	std::fstream data;
+	data.open("data1.bin",std::ios::out);
+	if (data.is_open() == false)
+	{
+		std::cerr << "Cannot open data binaries\n";
+		return;
+	}
+	for (int i = 0; i < 10; i++)
+	{
+		// Random hex numbers
+		data << RandomHex();
+	}
+	data << GetHex(interfaceColor);
+	data << ' ';
+	data << std::hex << globalScore;
+	data << ' ';
+	data << std::hex << spriteID;
+	data.close();
+}
+
 void Game::Run()
 {
+
 	sf::Texture backgroundTexture;
 	backgroundTexture.loadFromFile("images/background.png");
 
 	sf::Sprite backgroundSprite(backgroundTexture);
 	backgroundSprite.setPosition(sf::Vector2f(0, 0));
 
+	bird = new Player(&m_window);
+
+	gui = new InterfaceManager(width, height, &m_window, bird);
+
 	sf::Event windowEvent;
-	gui = new InterfaceManager(width, height, &m_window);
 	gui->SetScorePointer(score);
+	gui->SetColorPointer(&interfaceColor);
+	gui->LoadInterface(Load());
+
+
+	bird->ForceSprite(&spriteID);
 
 	ChangeState(FirstRun);
+
+	bool forceBreak = false;
 	while (m_window.isOpen())
 	{
 		m_window.clear();
@@ -33,22 +96,30 @@ void Game::Run()
 		m_window.display();
 
 		while (m_window.pollEvent(windowEvent))
-			if (HandleEvent(windowEvent) == false) 
-				return;
+			if (HandleEvent(windowEvent) == false)
+			{
+				forceBreak = true;
+				break;
+			}
+
+		if (forceBreak == true)
+			break;
 
 		switch(gameState->Logic())
 		{
-		case State::EventType::ELose:
+		case Player::EventType::ELose:
 			ChangeState(StateList::StateLose);
 			break;
-		case State::EventType::EScore:
+		case Player::EventType::EScore:
 			(*score)++;
+			globalScore++;
 			gui->NoticePoint();
 			break;
 		default:
 			break;
 		}
 	}
+	Save();
 }
 
 bool Game::HandleEvent(sf::Event & e)
@@ -80,7 +151,7 @@ bool Game::HandleEvent(sf::Event & e)
 		break;
 
 	case State::InputHandlerReasons::ShowOptions:
-		//ChangeState(StateOptions);
+		ChangeState(StateOptions);
 		break;
 
 	default:
@@ -131,7 +202,7 @@ void Game::ChangeState(Game::StateList newState)
 	{
 		if(gameState != nullptr) 
 			delete gameState;
-		gameState = new Running(&m_window);
+		gameState = new Running(&m_window,bird);
 	}
 
 	else if (newState == FirstRun)
@@ -148,7 +219,7 @@ void Game::ChangeState(Game::StateList newState)
 	else if (newState == StateOptions)
 	{
 		delete gameState;
-		gameState = new OptionsMenu(&m_window);
+		gameState = new OptionsMenu(&m_window,bird);
 	}
 
 	else
