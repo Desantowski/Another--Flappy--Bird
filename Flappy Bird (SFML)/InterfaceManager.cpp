@@ -4,15 +4,14 @@
 		#pragma region Button
 Button::Button(sf::Texture * _texture, sf::Texture * _selected, sf::RenderWindow * _window, Text * text) : State(Free), window(_window), label(text)
 {
-	selected = new Sprite(_window, _selected);
-	free = new Sprite(_window, _texture);
-	current = free;
-	texture = _texture;
+	buttonSprite = new Sprite(_window, _texture);
+	textureFree = _texture;
+	textureSelected = _selected;
 }
 
 void Button::Draw()
 {
-	current->Draw();
+	buttonSprite->Draw();
 	label->Draw();
 }
 
@@ -21,43 +20,92 @@ void Button::ChangeState()
 	if (State == Selected)
 	{
 		State = Free;
-		current = free;
+		buttonSprite->SetTexture(textureFree);
 	}
 	else
 	{
 		State = Selected;
-		current = selected;
+		buttonSprite->SetTexture(textureSelected);
 	}
-}
-
-void Button::SetLengthInfo(int l)
-{
-	length = l;
 }
 
 void Button::SetPosition(sf::Vector2f pos)
 {
-	free->SetPosition(pos);
-	selected->SetPosition(pos);
-	pos.x += (texture->getSize().x - label->GetSize().x)/2;
+	buttonSprite->SetPosition(pos);
+	pos.x += (textureFree->getSize().x - label->GetSize().x)/2;
 	label->SetPosition(pos);
 }
 
 sf::Vector2f Button::GetPosition()
 {
-	return free->GetPosition();
+	return buttonSprite->GetPosition();
 }
 
 sf::FloatRect Button::GetBounds()
 {
-	return free->GetBounds();
+	return buttonSprite->GetBounds();
 }
 
 void Button::SetScale(float x, float y)
 {
-	free->SetScale(x,y);
-	selected->SetScale(x, y);
+	buttonSprite->SetScale(x,y);
 	label->SetScale(x, y);
+}
+
+void Button::SetLabel(std::string text)
+{
+	label->SetText(text);
+}
+		#pragma endregion
+
+		#pragma	region ArrowedButton
+ArrowedButton::ArrowedButton(sf::Texture * _texture, sf::Texture * _selected, sf::Texture * left, sf::Texture * right, sf::RenderWindow * _window, Text * text)
+	: Button(_texture, _selected, _window, text)
+{
+	leftArrow = new Sprite(_window, left);
+	rightArrow = new Sprite(_window, right);
+}
+
+ArrowedButton::~ArrowedButton()
+{
+	delete rightArrow;
+	delete leftArrow;
+}
+
+void ArrowedButton::Draw()
+{
+	Button::Draw();
+	leftArrow->Draw();
+	rightArrow->Draw();
+}
+
+void ArrowedButton::SetPosition(sf::Vector2f pos)
+{
+	static constexpr float factor = 0.5;
+
+	static constexpr float margin = 10.f;
+
+	Button::SetPosition(pos);
+
+	leftArrow->SetScale(factor, factor);
+	rightArrow->SetScale(factor, factor);
+
+	float arrowHeight = leftArrow->GetSize().y;
+	float buttonHeight = textureFree->getSize().y;
+
+	float arrowWidth = leftArrow->GetSize().x;
+	float buttonRight = GetPosition().x + textureFree->getSize().x;
+
+	arrowHeight = (buttonHeight - arrowHeight) / 2; // Arrow height offset 
+
+	pos.y += arrowHeight;
+	pos.x += margin;
+	leftArrow->SetPosition(pos);
+	
+	pos.x = buttonRight - arrowWidth - margin;
+	rightArrow->SetPosition(pos);
+
+	label->Move(sf::Vector2f(0, 8));
 }
 		#pragma endregion
 
@@ -127,30 +175,85 @@ void Panel::SetTextPos(Text * tlabel, sf::Vector2f pos)
 }
 	#pragma endregion
 
-InterfaceManager::InterfaceManager(unsigned int _width, unsigned int _height, sf::RenderWindow * _window) : width(_width), height(_height), window(_window)
+void InterfaceManager::LoadInterface(bool increasing)
 {
+	if (increasing) LoadInterface(*currentColorID + 1);
+	else LoadInterface(*currentColorID - 1);
+}
+
+void InterfaceManager::LoadInterface(int colorID)
+{
+	if (colorID > 2)
+		colorID = colorID % 3;
+	else if (colorID < 0)
+		colorID = (3 * 500 + colorID) % 3;
+	std::string Green[3] = { "images/GreenButtonSelected.png","images/GreenButton.png", "images/GreenPanel.png" }; 
+	std::string Yellow[3] = { "images/YellowButtonSelected.png","images/YellowButton.png", "images/YellowPanel.png" };
+	std::string Blue[3] = { "images/BlueButtonSelected.png","images/BlueButton.png", "images/BluePanel.png" };
+
 	sf::Texture * loader;
 
+	std::string * colored;
+	switch (colorID)
+	{
+	case 1:
+		colored = Yellow;
+		break;
+	case 2:
+		colored = Blue;
+		break;
+
+	default:
+		colored = Green;
+	}
+
+	loader = getTexture("ButtonSelected");
+	loader->loadFromFile(colored[0]);
+
+	loader = getTexture("Button");
+	loader->loadFromFile(colored[1]);
+
+	loader = getTexture("Panel");
+	loader->loadFromFile(colored[2]);
+
+	*currentColorID = colorID;
+}
+
+InterfaceManager::InterfaceManager(unsigned int _width, unsigned int _height, sf::RenderWindow * _window, Player * _bird) : width(_width), height(_height), window(_window), bird(_bird)
+{
+	drawingPlayer = false;
 	systemPausePanel = nullptr;
 	gameText = nullptr;
 
 	kenvector = new sf::Font();
 	kenvector->loadFromFile("fonts/kenvector_future.ttf");
 
+	sf::Texture * loader;
+
 	loader = new sf::Texture();
 	loader->loadFromFile("images/GreenButtonSelected.png");
 	textures.push_back(loader);
-	keys.push_back("GreenButtonSelected");
+	keys.push_back("ButtonSelected");
 
 	loader = new sf::Texture();
 	loader->loadFromFile("images/GreenButton.png");
 	textures.push_back(loader);
-	keys.push_back("GreenButton");
+	keys.push_back("Button");
 
 	loader = new sf::Texture();
 	loader->loadFromFile("images/GreenPanel.png");
 	textures.push_back(loader);
-	keys.push_back("GreenPanel");
+	keys.push_back("Panel");
+
+	loader = new sf::Texture();
+	loader->loadFromFile("images/LeftArrow.png");
+	textures.push_back(loader);
+	keys.push_back("LeftArrow");
+
+	loader = new sf::Texture();
+	loader->loadFromFile("images/RightArrow.png");
+	textures.push_back(loader);
+	keys.push_back("RightArrow");
 }
 
 InterfaceManager::~InterfaceManager()
@@ -167,7 +270,7 @@ InterfaceManager::~InterfaceManager()
 void InterfaceManager::SetMode(InterfaceManager::InterfaceMode mode)
 {
 	if (currentMode == mode) return;
-
+	drawingPlayer = false;
 	for (MinimalDrawable * x : gameObjects)
 		delete x;
 	gameObjects.clear();
@@ -185,11 +288,58 @@ void InterfaceManager::SetMode(InterfaceManager::InterfaceMode mode)
 	if (mode == InterfaceMode::Null)
 		return;
 
+	else if (mode == InterfaceMode::OptionsMenu)
+	{
+		sf::Texture * buttonFree = getTexture("Button");
+		sf::Texture * buttonSelected = getTexture("ButtonSelected");
+		sf::Texture * leftArrow = getTexture("LeftArrow");
+		sf::Texture * rightArrow = getTexture("RightArrow");
+
+		// Coordinates of center of window
+		sf::Vector2f posv(width / 2, height / 2);
+
+		// Position where center of window = center of button
+		posv.x -= buttonFree->getSize().x / 2;
+		posv.y -= buttonFree->getSize().y / 2;
+
+
+		posv.y += 20;
+		// TODO: recalculate and check position of sprite
+		bird->SetPosition(sf::Vector2f(330, 150));
+
+		Text * play_label;
+		play_label = new Text(window, kenvector, "Kolor UI");
+		play_label->SetOutlineThickness(2.0);
+		play_label->SetSize(20);
+		ArrowedButton * play = new ArrowedButton(buttonFree, buttonSelected, leftArrow, rightArrow, window, play_label);
+		play->SetPosition(posv);
+		play->ChangeState();
+		gameObjects.push_back(play);
+
+		play_label = new Text(window, kenvector, "Postac");
+		play_label->SetOutlineThickness(2.0);
+		play_label->SetSize(20);
+		play = new ArrowedButton(buttonFree, buttonSelected, leftArrow, rightArrow, window, play_label);
+		posv.y +=  60;
+		play->SetPosition(posv);
+		gameObjects.push_back(play);
+
+		posv.y += 120;
+		play_label = new Text(window, kenvector, "Powrot");
+		play_label->SetOutlineThickness(2.0);
+		play_label->SetSize(30);
+		Button * play2 = new Button(buttonFree, buttonSelected, window, play_label);
+		play2->SetPosition(posv);
+		gameObjects.push_back(play2);
+
+		drawingPlayer = true;
+	}
+
 	else if (mode == InterfaceMode::MainMenu)
 	{
 
-		sf::Texture * buttonFree = getTexture("GreenButton");
-		sf::Texture * buttonSelected = getTexture("GreenButtonSelected");
+		sf::Texture * buttonFree = getTexture("Button");
+		sf::Texture * buttonSelected = getTexture("ButtonSelected");
 
 		// Coordinates of center of window
 		sf::Vector2f posv(width / 2, height / 2);
@@ -204,7 +354,6 @@ void InterfaceManager::SetMode(InterfaceManager::InterfaceMode mode)
 		play_label->SetOutlineThickness(2.0);
 		play_label->SetSize(30);
 		Button * play = new Button(buttonFree, buttonSelected, window, play_label);
-		play->SetLengthInfo(4);
 		play->SetPosition(posv);
 		play->ChangeState();
 		gameObjects.push_back(play);
@@ -215,7 +364,6 @@ void InterfaceManager::SetMode(InterfaceManager::InterfaceMode mode)
 		play_label->SetOutlineThickness(2.0);
 		play_label->SetSize(30);
 		play = new Button(buttonFree, buttonSelected, window, play_label);
-		play->SetLengthInfo(7);
 		play->SetPosition(posv);
 		gameObjects.push_back(play);
 		
@@ -225,9 +373,16 @@ void InterfaceManager::SetMode(InterfaceManager::InterfaceMode mode)
 		play_label->SetOutlineThickness(2.0);
 		play_label->SetSize(30);
 		play = new Button(buttonFree, buttonSelected, window, play_label);
-		play->SetLengthInfo(4);
 		play->SetPosition(posv);
 		gameObjects.push_back(play);
+
+		posv.y = 540;
+		posv.x = 10;
+		play_label = new Text(window, kenvector, "Grafika: opengameart.com, bevouliin.com\nCzcionki: oepngameart.com (Kenney)\nKod: desantowski");
+		play_label->SetOutlineThickness(1.0);
+		play_label->SetPosition(posv);
+		play_label->SetSize(15);
+		gameText = play_label;
 	}
 
 	else if (mode == InterfaceMode::Pause)
@@ -268,7 +423,7 @@ void InterfaceManager::SetMode(InterfaceManager::InterfaceMode mode)
 		pauseLabel->SetSize(15);
 		labels.push_back(pauseLabel);
 
-		systemPausePanel = new Panel(getTexture("GreenPanel"), window, labels);
+		systemPausePanel = new Panel(getTexture("Panel"), window, labels);
 		systemPausePanel->SetPosition(sf::Vector2f(width / 2, height / 2), true);
 	}
 	
@@ -294,7 +449,7 @@ void InterfaceManager::SetMode(InterfaceManager::InterfaceMode mode)
 		pauseLabel->SetSize(20);
 		labels.push_back(pauseLabel);
 
-		systemPausePanel = new Panel(getTexture("GreenPanel"),window,labels);
+		systemPausePanel = new Panel(getTexture("Panel"),window,labels);
 		systemPausePanel->SetPosition(sf::Vector2f(width / 2, height / 2));
 	}
 
@@ -302,6 +457,9 @@ void InterfaceManager::SetMode(InterfaceManager::InterfaceMode mode)
 	{
 		std::string pointsstring("Score: ");
 		pointsstring.append(std::to_string(*score));
+
+		if (gameText != nullptr)
+			delete gameText;
 
 		gameText = new Text(window, kenvector, pointsstring);
 		gameText->SetPosition(sf::Vector2f(50, 50));
@@ -330,6 +488,8 @@ void InterfaceManager::Draw()
 		systemPausePanel->Draw();
 	if (gameText != nullptr)
 		gameText->Draw();
+	if (drawingPlayer)
+		bird->Draw();
 }
 
 void InterfaceManager::NoticePoint()
@@ -364,6 +524,11 @@ void InterfaceManager::NoticeSelection(bool goDown)
 void InterfaceManager::SetScorePointer(int * ptr)
 {
 	score = ptr;
+}
+
+void InterfaceManager::SetColorPointer(int * ptr)
+{
+	currentColorID = ptr;
 }
 
 int * InterfaceManager::GetScorePointer()

@@ -1,26 +1,25 @@
 #pragma once
 #include <vector>
+#include <sstream>
+#include <iostream>
 #include <SFML/Graphics.hpp>
 #include "Renderable.h"
+#include "Player.h"
 
 // Button class
 class Button : public MinimalDrawable
 {
-private:
-	// Pointers for sprites with specific textures - selected is selected button texture, free is unselected
-	Sprite * selected;
-	Sprite * free;
+protected:
+	// Pointers for sprite and specific textures
+	Sprite * buttonSprite;
+	sf::Texture * textureFree;
+	sf::Texture * textureSelected;
 
 	// Drawing window and any of textures
 	sf::RenderWindow * window;
-	sf::Texture * texture;
 
 	// Label of button and current sprite (depends on selected item)
 	Text * label;
-	Sprite * current;
-
-	// Length of label text
-	int length;
 
 public:
 	Button(sf::Texture * _texture, sf::Texture * _selected, sf::RenderWindow * _window, Text * text);
@@ -31,18 +30,32 @@ public:
 	void ChangeState();
 
 	// Setters and getters
-	void SetPosition(sf::Vector2f pos);
+	virtual void SetPosition(sf::Vector2f pos);
 	sf::Vector2f GetPosition();
 
 	sf::FloatRect GetBounds();
 	void SetScale(float x, float y);
-	void SetLengthInfo(int l);
+
+	void SetLabel(std::string newlabel);
 
 	enum
 	{
 		Selected,
 		Free
 	} State;
+};
+
+class ArrowedButton : public Button
+{
+protected:
+	Sprite * leftArrow;
+	Sprite * rightArrow;
+
+public:
+	ArrowedButton(sf::Texture * _texture, sf::Texture * _selected, sf::Texture * left, sf::Texture * right, sf::RenderWindow * _window, Text * text);
+	~ArrowedButton();
+	virtual void SetPosition(sf::Vector2f pos) override;
+	virtual void Draw() override;
 };
 
 // Panel class - background with some texts
@@ -78,13 +91,14 @@ public:
 	{
 		Null,
 		MainMenu,
+		OptionsMenu,
 		SystemPause,
 		Pause,
 		Running
 	};
 
 	// Constructor and destructor
-	InterfaceManager(unsigned int _width, unsigned int _height, sf::RenderWindow * _window);
+	InterfaceManager(unsigned int _width, unsigned int _height, sf::RenderWindow * _window, Player * _bird);
 	~InterfaceManager();
 
 	// Drawing functions - mode of drawing management and drawing function
@@ -94,11 +108,19 @@ public:
 	// Pointer to score variable, shared with Game and State
 	void SetScorePointer(int * ptr);
 	int * GetScorePointer();
+	void SetColorPointer(int * ptr);
+
+	// Reloads interface in specified color, in next (if increasing) or previous (if false) color
+	void LoadInterface(int colorID);
+	void LoadInterface(bool increasing);
 
 private:
 	// Size of window, pointer to window
 	unsigned int width, height;
 	sf::RenderWindow * window;
+
+	// Pointer to player
+	Player * bird;
 
 	// Pointers to all drawables of InterfaceManager
 	std::vector<Button *> gameObjects;
@@ -117,9 +139,15 @@ private:
 	// Pointer to kenvector font
 	sf::Font * kenvector;
 
-	// Text with scores
+	// Text with scores (while playing) and credits (menu)
 	Text * gameText;
 
-	//Score
+	// Score
 	int * score;
+
+	// ID of current color of interface
+	int * currentColorID; 
+
+	// Determines if player will be drawen as GUI part
+	bool drawingPlayer;
 };
