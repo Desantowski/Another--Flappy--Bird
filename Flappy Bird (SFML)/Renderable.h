@@ -51,6 +51,8 @@ public:
 	virtual void Draw() override;
 	virtual void Move(sf::Vector2f offset) override;
 
+	virtual void SetTexture(sf::Texture * texture);
+
 	// Setters and getters
 	virtual void SetPosition(sf::Vector2f pos) override;
 	virtual sf::Vector2f GetPosition() override;

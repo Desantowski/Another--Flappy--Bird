@@ -25,6 +25,12 @@ void Sprite::Draw()
 	window->draw(*sprite);
 }
 
+void Sprite::SetTexture(sf::Texture * txtr)
+{
+	sprite->setTexture(*txtr, true);
+	texture = txtr;
+}
+
 void Sprite::SetPosition(sf::Vector2f pos)
 {
 	sprite->setPosition(pos);
