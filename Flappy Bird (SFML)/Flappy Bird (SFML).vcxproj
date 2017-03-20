@@ -152,6 +152,7 @@
     <ClCompile Include="InterfaceManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ObstacleManager.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="Renderable.cpp" />
     <ClCompile Include="State.cpp" />
   </ItemGroup>
@@ -159,6 +160,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="InterfaceManager.h" />
     <ClInclude Include="ObstacleManager.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="Renderable.h" />
     <ClInclude Include="State.h" />
   </ItemGroup>
