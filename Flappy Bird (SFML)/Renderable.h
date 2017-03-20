@@ -62,6 +62,7 @@ public:
 
 	virtual sf::FloatRect GetBounds() override;
 	virtual sf::Vector2f GetSize() override;
+	virtual void SetSize(sf::Vector2f dims);
 };
 
 class Text : public Drawable

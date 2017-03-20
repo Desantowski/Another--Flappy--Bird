@@ -56,6 +56,13 @@ sf::Vector2f Sprite::GetScale()
 	return sprite->getScale();
 }
 
+void Sprite::SetSize(sf::Vector2f dims)
+{
+	float scaleX = texture->getSize().x / dims.x;
+	float scaleY = texture->getSize().y / dims.y;
+	sprite->setScale(sf::Vector2f(scaleX, scaleY));
+}
+
 sf::Vector2f Sprite::GetSize()
 {
 	return sf::Vector2f(sprite->getGlobalBounds().width, sprite->getGlobalBounds().height);
