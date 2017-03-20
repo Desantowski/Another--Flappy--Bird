@@ -68,12 +68,12 @@ void Game::Run()
 {
 
 	sf::Texture backgroundTexture;
-	backgroundTexture.loadFromFile("images/background.png");
+	if (backgroundTexture.loadFromFile("images/background.png") == false) throw FileNotFound("images/background.png");
 
 	sf::Sprite backgroundSprite(backgroundTexture);
 	backgroundSprite.setPosition(sf::Vector2f(0, 0));
 
-	bird = new Player(&m_window);
+	bird = new Player(&m_window,&spriteID);
 
 	gui = new InterfaceManager(width, height, &m_window, bird);
 

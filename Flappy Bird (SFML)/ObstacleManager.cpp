@@ -94,10 +94,10 @@ ObstacleManager::ObstacleManager(sf::RenderWindow * xwindow)
 	downTexture = new sf::Texture();
 
 	sf::IntRect area(sf::Vector2i(0, height - range), sf::Vector2i(width, range));
-	upTexture->loadFromFile("images/GreenObstacleTop.png", area);
+	if (upTexture->loadFromFile("images/GreenObstacleTop.png", area) == false) throw FileNotFound("images/GreenObstacleTop.png");
 
 	sf::IntRect areaLow(sf::Vector2i(0, 0), sf::Vector2i(width, range));
-	downTexture->loadFromFile("images/GreenObstacleDown.png", areaLow);
+	if (downTexture->loadFromFile("images/GreenObstacleDown.png", areaLow) == false) throw FileNotFound("images/GreenObstacleDown.png");
 
 	Obstacle * loader;
 

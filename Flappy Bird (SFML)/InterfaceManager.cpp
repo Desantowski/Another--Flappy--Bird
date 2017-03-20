@@ -208,13 +208,13 @@ void InterfaceManager::LoadInterface(int colorID)
 	}
 
 	loader = getTexture("ButtonSelected");
-	loader->loadFromFile(colored[0]);
+	if (loader->loadFromFile(colored[0]) == false) throw FileNotFound(colored[0]);
 
 	loader = getTexture("Button");
-	loader->loadFromFile(colored[1]);
+	if (loader->loadFromFile(colored[1]) == false) throw FileNotFound(colored[1]);
 
 	loader = getTexture("Panel");
-	loader->loadFromFile(colored[2]);
+	if (loader->loadFromFile(colored[2]) == false) throw FileNotFound(colored[2]);
 
 	*currentColorID = colorID;
 }
@@ -226,32 +226,32 @@ InterfaceManager::InterfaceManager(unsigned int _width, unsigned int _height, sf
 	gameText = nullptr;
 
 	kenvector = new sf::Font();
-	kenvector->loadFromFile("fonts/kenvector_future.ttf");
+	if (kenvector->loadFromFile("fonts/kenvector_future.ttf") == false) throw FileNotFound("fonts/kenvector_future.ttf");
 
 	sf::Texture * loader;
 
 	loader = new sf::Texture();
-	loader->loadFromFile("images/GreenButtonSelected.png");
+	if (loader->loadFromFile("images/GreenButtonSelected.png") == false) throw FileNotFound("images/GreenButtonSelected.png");
 	textures.push_back(loader);
 	keys.push_back("ButtonSelected");
 
 	loader = new sf::Texture();
-	loader->loadFromFile("images/GreenButton.png");
+	if (loader->loadFromFile("images/GreenButton.png") == false) throw FileNotFound("GreenButton.png");
 	textures.push_back(loader);
 	keys.push_back("Button");
 
 	loader = new sf::Texture();
-	loader->loadFromFile("images/GreenPanel.png");
+	if (loader->loadFromFile("images/GreenPanel.png") == false) throw FileNotFound("images/GreenPanel.png");
 	textures.push_back(loader);
 	keys.push_back("Panel");
 
 	loader = new sf::Texture();
-	loader->loadFromFile("images/LeftArrow.png");
+	if (loader->loadFromFile("images/LeftArrow.png") == false) throw FileNotFound("images/LeftArrow.png");
 	textures.push_back(loader);
 	keys.push_back("LeftArrow");
 
 	loader = new sf::Texture();
-	loader->loadFromFile("images/RightArrow.png");
+	if (loader->loadFromFile("images/RightArrow.png") == false) throw FileNotFound("images/RightArrow.png");
 	textures.push_back(loader);
 	keys.push_back("RightArrow");
 }

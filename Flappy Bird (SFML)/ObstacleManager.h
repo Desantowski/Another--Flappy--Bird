@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML\Graphics.hpp>
 #include "Renderable.h"
+#include "Exception.h"
 
 // Obstacle inherits from MinimalDrawable for Draw() - it allows to store obstacles and other graphics in one vector
 class Obstacle : MinimalDrawable
