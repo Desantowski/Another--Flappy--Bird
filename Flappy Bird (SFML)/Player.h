@@ -1,7 +1,9 @@
 #pragma once
 #include <vector>
+#include <sstream>
 #include <SFML/Graphics.hpp>
 #include "Renderable.h"
+#include "Exception.h"
 #include "ObstacleManager.h"
 
 class Player
@@ -31,7 +33,7 @@ public:
 		EScore
 	};
 
-	Player(sf::RenderWindow * xwindow);
+	Player(sf::RenderWindow * xwindow, int * idptr);
 	~Player();
 	EventType Logic(sf::Time deltaTime);
 
@@ -49,5 +51,8 @@ public:
 
 	// Forces to set specific sprite and sets pointer to sprite ID global variable
 	void ForceSprite(int *spriteID);
+
+	// Resets player velocity when game starts
+	void ResetVectors();
 };
 
