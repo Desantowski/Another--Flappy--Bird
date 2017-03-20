@@ -19,7 +19,7 @@ void State::UpdateGUI(InterfaceManager * _gui)
 
 #pragma region Menu
 #pragma region OptionsMenu
-OptionsMenu::OptionsMenu(sf::RenderWindow * x) : Menu(0), suboption(0)
+OptionsMenu::OptionsMenu(sf::RenderWindow * x, Player * birdie) : Menu(0), bird(birdie)
 {
 }
 
@@ -34,10 +34,10 @@ State::InputHandlerReasons OptionsMenu::InputController(sf::Event & e)
 	{
 		if (e.key.code == sf::Keyboard::Return)
 		{
-			if (selection < 0 || selection > 2) selection = selection % 3;
+			if(selection > 2) selection = selection % 3;
 			if (selection == 0) return InputHandlerReasons::GameStarted;// Colors
-			if (selection == 1) return InputHandlerReasons::ShowOptions;// Bird sprite
-			if (selection == 2) return InputHandlerReasons::Exit;// Back
+			if (selection == 1) return InputHandlerReasons::ShowOptions;// Sprite
+			if (selection == 2) return InputHandlerReasons::GameEnded;// Back
 		}
 		else if (e.key.code == sf::Keyboard::Up)
 		{
@@ -53,11 +53,23 @@ State::InputHandlerReasons OptionsMenu::InputController(sf::Event & e)
 		{
 			if(selection == 0)
 			{
+				gui->LoadInterface(false);
+			}
+			else if (selection == 1)
+			{
+				bird->NoticeSpriteChanged(false);
 			}
 		}
 		else if (e.key.code == sf::Keyboard::Right)
 		{
-			suboption++;
+			if (selection == 0)
+			{
+				gui->LoadInterface(true);
+			}
+			else if (selection == 1)
+			{
+				bird->NoticeSpriteChanged(true);
+			}
 		}
 		else if (e.key.code == sf::Keyboard::Escape)
 		{
@@ -70,7 +82,7 @@ State::InputHandlerReasons OptionsMenu::InputController(sf::Event & e)
 void OptionsMenu::UpdateGUI(InterfaceManager * _gui)
 {
 	gui = _gui;
-	gui->SetMode(InterfaceManager::InterfaceMode::MainMenu);
+	gui->SetMode(InterfaceManager::InterfaceMode::OptionsMenu);
 }
 #pragma endregion
 
@@ -112,9 +124,9 @@ State::InputHandlerReasons Menu::InputController(sf::Event & e)
 	return InputHandlerReasons::None;
 }
 
-State::EventType Menu::Logic()
+Player::EventType Menu::Logic()
 {
-	return EventType::ENone;
+	return Player::EventType::ENone;
 }
 
 void Menu::UpdateGUI(InterfaceManager * _gui)
@@ -130,32 +142,24 @@ void Menu::Draw()
 #pragma endregion
 
 #pragma region Running
-Running::Running(sf::RenderWindow * xwindow) : gravityForce(0.f,10.f), playerVelocity(0.f,0.f), playerForce(0.f,5.f), obstacles(xwindow)
+Running::Running(sf::RenderWindow * xwindow, Player * _bird) : obstacles(xwindow), bird(_bird)
 {
-	playerTexture = new sf::Texture();
-	playerTexture->loadFromFile("images/green_bird/frame-4.png");
-
-	playerSprite = new Sprite(xwindow, playerTexture);
-	playerSprite->SetScale(0.2, 0.2);
-	playerSprite->SetPosition(sf::Vector2f(50, 300));
+	bird->SetPosition(sf::Vector2f(50, 300));
 	gameClock.restart();
+	bird->SetObstacleManager(&obstacles);
+
 }
 
 Running::~Running()
 {
-	delete playerTexture;
 }
 
-State::EventType Running::Logic()
+Player::EventType Running::Logic()
 {
 	sf::Time deltaTime = gameClock.getElapsedTime();
+	Player::EventType out(bird->Logic(deltaTime));
 	gameClock.restart();
-	playerVelocity += deltaTime.asSeconds() * gravityForce;
-	playerSprite->Move(playerVelocity);
-
-	if (obstacles.MoveAndCheckCollisions(playerSprite) == true) return EventType::ELose;
-	if(obstacles.CheckScore(playerSprite) == true) return EventType::EScore;
-	else return EventType::ENone;
+	return out;
 }
 
 State::InputHandlerReasons Running::InputController(sf::Event & e)
@@ -169,19 +173,19 @@ State::InputHandlerReasons Running::InputController(sf::Event & e)
 		}
 		else if (e.key.code == sf::Keyboard::Space)
 		{
-			playerVelocity -= playerForce;
+			bird->NoticeMove();
 		}
 	}
 	else if (e.type == sf::Event::EventType::MouseButtonPressed)
 	{
-		playerVelocity -= gravityForce;
+		bird->NoticeMove();
 	}
 	return InputHandlerReasons::None;
 }
 
 void Running::Draw()
 {
-	playerSprite->Draw();
+	bird->Draw();
 	obstacles.Draw();
 	gui->Draw();
 }
@@ -212,9 +216,9 @@ void SystemPause::Draw()
 	gui->Draw();
 }
 
-State::EventType SystemPause::Logic()
+Player::EventType SystemPause::Logic()
 {
-	return State::ENone;
+	return Player::EventType::ENone;
 }
 
 State::InputHandlerReasons SystemPause::InputController(sf::Event & e)
@@ -224,7 +228,7 @@ State::InputHandlerReasons SystemPause::InputController(sf::Event & e)
 	{
 		if (e.key.code == sf::Keyboard::Escape)
 		{
-			return InputHandlerReasons::Exit;
+			return InputHandlerReasons::GameEnded;
 		}
 		else if (e.key.code == sf::Keyboard::Return)
 		{

@@ -4,6 +4,7 @@
 #include "Renderable.h"
 #include "InterfaceManager.h"
 #include "ObstacleManager.h"
+#include "Player.h"
 
 // Abstract state class
 class State
@@ -21,14 +22,6 @@ public:
 		Exit
 	};
 
-	// Returned signal from logic processing
-	enum EventType
-	{
-		ENone,
-		ELose,
-		EScore
-	};
-
 	// Destructor
 	virtual ~State();
 
@@ -36,7 +29,7 @@ public:
 	virtual void Draw();
 
 	// Logic, for example for moving
-	virtual EventType Logic() = 0;
+	virtual Player::EventType Logic() = 0;
 
 	// Handling input
 	virtual InputHandlerReasons InputController(sf::Event & e) = 0;
@@ -59,7 +52,7 @@ public:
 	Menu(sf::RenderWindow * x);
 	~Menu();
 	virtual void Draw() override;
-	virtual EventType Logic() override;
+	virtual Player::EventType Logic() override;
 	virtual InputHandlerReasons InputController(sf::Event & e) override;
 	virtual void UpdateGUI(InterfaceManager * _gui) override;
 };
@@ -68,11 +61,10 @@ public:
 // Page 'options' of menu
 class OptionsMenu : public Menu
 {
-private:
-	int suboption;
 public:
-	OptionsMenu(sf::RenderWindow * x);
+	OptionsMenu(sf::RenderWindow * x, Player * birdie);
 	~OptionsMenu();
+	Player * bird;
 	virtual InputHandlerReasons InputController(sf::Event & e) override;
 	virtual void UpdateGUI(InterfaceManager * _gui) override;
 };
@@ -87,7 +79,7 @@ protected:
 public:
 	SystemPause(sf::RenderWindow * x);
 	~SystemPause();
-	virtual EventType Logic() override;
+	virtual Player::EventType Logic() override;
 	virtual InputHandlerReasons InputController(sf::Event & e) override;
 	virtual void UpdateGUI(InterfaceManager * _gui) override;
 	virtual void Draw() override;
@@ -97,25 +89,16 @@ public:
 // General game logic
 class Running : public State
 {
-	// Management of obstacles
+	// Management of obstacles and GUI, pointer to instance of player
 	ObstacleManager obstacles;
-
-	// Player sprite & texture - managed here
-	sf::Texture * playerTexture;
-	Sprite * playerSprite;
-
-	// Vectors for movement and game clock
-	sf::Vector2f gravityForce;
-	sf::Vector2f playerForce;
-	sf::Vector2f playerVelocity;
 	sf::Clock gameClock;
-
+	Player * bird;
 	virtual void UpdateGUI(InterfaceManager * _gui) override;
 
 public:
-	Running(sf::RenderWindow * xwindow);
+	Running(sf::RenderWindow * xwindow, Player * _bird);
 	~Running();
-	virtual EventType Logic() override;
+	virtual Player::EventType Logic() override;
 	virtual InputHandlerReasons InputController(sf::Event & e) override;
 	virtual void Draw() override;
 
