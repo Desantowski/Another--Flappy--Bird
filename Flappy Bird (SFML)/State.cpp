@@ -145,9 +145,9 @@ void Menu::Draw()
 Running::Running(sf::RenderWindow * xwindow, Player * _bird) : obstacles(xwindow), bird(_bird)
 {
 	bird->SetPosition(sf::Vector2f(50, 300));
-	gameClock.restart();
 	bird->SetObstacleManager(&obstacles);
-
+	bird->ResetVectors();
+	gameClock.restart();
 }
 
 Running::~Running()
@@ -198,6 +198,7 @@ void Running::UpdateGUI(InterfaceManager * _gui)
 
 void Running::FixClock()
 {
+	bird->ResetVectors();
 	gameClock.restart();
 }
 #pragma endregion
