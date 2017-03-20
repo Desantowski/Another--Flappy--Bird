@@ -35,8 +35,8 @@ State::InputHandlerReasons OptionsMenu::InputController(sf::Event & e)
 		if (e.key.code == sf::Keyboard::Return)
 		{
 			if(selection > 2) selection = selection % 3;
-			if (selection == 0) return InputHandlerReasons::GameStarted;// Colors
-			if (selection == 1) return InputHandlerReasons::ShowOptions;// Sprite
+			if (selection == 0) return InputHandlerReasons::None;// Colors
+			if (selection == 1) return InputHandlerReasons::None;// Sprite
 			if (selection == 2) return InputHandlerReasons::GameEnded;// Back
 		}
 		else if (e.key.code == sf::Keyboard::Up)
