@@ -1,5 +1,4 @@
 #include "State.h"
-
 #pragma region StateAbstract
 // GENERAL
 State::~State()

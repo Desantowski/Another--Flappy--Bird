@@ -67,7 +67,6 @@ public:
 
 class Text : public Drawable
 {
-	// TODO: see: class Sprite
 protected:
 	// Protected pointers
 	// text is local, hidden sf::Text, managed only from this class
@@ -80,6 +79,7 @@ protected:
 
 	// Stores number of characters in label
 	int length;
+
 public:
 	Text(sf::RenderWindow * xwindow, sf::Font * xfont, std::string xtext);
 	virtual ~Text();
@@ -99,6 +99,7 @@ public:
 
 	// Text properties and methods
 	// Returns private int length 
+
 	int Length();
 	// Sets properties of text, equivalent with sf::Text
 	void SetColor(sf::Color color);
